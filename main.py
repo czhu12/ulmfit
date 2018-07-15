@@ -2,6 +2,7 @@ import argparse
 import time
 import math
 import os
+import pickle
 import torch
 import torch.nn as nn
 import torch.onnx
@@ -39,8 +40,9 @@ ntokens = len(corpus.dictionary)
 clip = 0.25
 log_interval = 200
 lr = 20
-epochs = 40
+epochs = 10
 save = 'model.pt'
+dict_save = 'dict.pickle'
 onnx_export = ''
 emsize = 200
 nhid = 200
@@ -138,8 +140,10 @@ try:
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
-            with open(save, 'wb') as f:
-                torch.save(model, f)
+            with open(save, 'wb') as model_f, open(dict_save, 'wb') as dict_f:
+                torch.save(model, model_f)
+                pickle.dump(corpus.dictionary, dict_f)
+
             best_val_loss = val_loss
         else:
             # Anneal the learning rate if no improvement has been seen in the validation dataset.
@@ -153,7 +157,7 @@ with open(save, 'rb') as f:
     model = torch.load(f)
     # after load the rnn params are not a continuous chunk of memory
     # this makes them a continuous chunk, and will speed up forward pass
-    model.rnn.flatten_parameters()
+    model.rnn_model.flatten_parameters()
 
 # Run on test data.
 test_loss = evaluate(test_data)

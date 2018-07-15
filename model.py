@@ -62,6 +62,9 @@ class RNNModel(nn.Module):
         weight = next(self.parameters())
         return weight.new_zeros(self.nlayers, bsz, self.nhid)
 
+    def flatten_parameters(self):
+        [rnn.flatten_parameters() for rnn in self.rnns]
+
 def main():
     batch_size = 64
     sequence_length = 50
