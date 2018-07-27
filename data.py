@@ -1,5 +1,31 @@
 import os
 import torch
+import re
+
+def striphtml(data):
+    p = re.compile(r'<.*?>')
+    return p.sub('', data)
+
+class ImdbLoader(object):
+    @staticmethod
+    def load(path, neg=50, pos=50):
+        positives = []
+        negatives = []
+        directory = os.path.join(path, 'train', 'pos')
+        for idx, filename in enumerate(os.listdir(directory)):
+            if idx >= pos:
+                break
+            positives.append(open(os.path.join(directory, filename), 'r').read())
+
+        directory = os.path.join(path, 'train', 'neg')
+        for idx, filename in enumerate(os.listdir(directory)):
+            if idx >= neg:
+                break
+            negatives.append(open(os.path.join(directory, filename), 'r').read())
+
+        positives = [striphtml(positive) for positive in positives]
+        negatives = [striphtml(negative) for negative in negatives]
+        return positives, negatives
 
 class Dictionary(object):
     def __init__(self):
@@ -47,3 +73,7 @@ class Corpus(object):
 
         return ids
 
+if __name__ == "__main__":
+    import pdb
+    positives, negatives = ImdbLoader.load('data/aclImdb', 20, 40)
+    pdb.set_trace()
